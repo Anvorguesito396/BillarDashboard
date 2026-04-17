@@ -44,7 +44,7 @@ export function Layout({ children }: LayoutProps) {
         {/* Logo */}
         <div className="p-6 border-b border-zinc-800">
           <h1 className="text-2xl font-bold text-white">
-            Billar<span className="text-green-400">Control</span>{/* Cambio de titulo */}
+            Billar<span className="text-green-400">Control</span>
           </h1>
           <p className="text-xs text-zinc-500 mt-1">Sistema Gestor de Billar</p>
         </div>

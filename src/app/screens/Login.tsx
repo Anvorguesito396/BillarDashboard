@@ -10,18 +10,21 @@ export function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useApp();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    const success = login(username, password);
+    setIsLoading(true);
+
+    const success = await login(username, password);
     if (success) {
       navigate('/dashboard');
     } else {
       setError('Usuario o contraseña incorrectos');
+      setIsLoading(false);
     }
   };
 
@@ -139,19 +142,21 @@ export function Login() {
 
               <Button
                 type="submit"
-                className="w-full bg-green-500 hover:bg-green-600 text-black font-semibold shadow-lg shadow-green-500/30"
+                disabled={isLoading}
+                className="w-full bg-green-500 hover:bg-green-600 text-black font-semibold shadow-lg shadow-green-500/30 disabled:opacity-50"
               >
-                Iniciar Sesión
+                {isLoading ? 'Verificando...' : 'Iniciar Sesión'}
               </Button>
             </form>
 
-            {/* Demo Credentials */}
             <div className="mt-6 p-4 bg-zinc-800/50 rounded-lg border border-zinc-700">
-              <p className="text-xs text-zinc-500 text-center mb-2">Credenciales de prueba:</p>
-              <p className="text-xs text-zinc-400 text-center">
-                Usuario: <span className="text-green-400">admin</span> / Contraseña:{' '}
-                <span className="text-green-400">admin</span>
-              </p>
+              <Button
+                type="button"
+                onClick={() => { }}
+                className="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold shadow-lg shadow-gray-500/30 disabled:opacity-50"
+              >
+                ¿Olvidaste tu contraseña?
+              </Button>
             </div>
           </div>
         </div>

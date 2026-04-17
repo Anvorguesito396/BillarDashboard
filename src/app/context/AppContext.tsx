@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '../../utils/supabase';
 
 export interface Product {
   id: string;
@@ -44,7 +45,7 @@ interface AppState {
 }
 
 interface AppContextType extends AppState {
-  login: (username: string, password: string) => boolean;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   startTableSession: (tableId: number) => void;
   endTableSession: (tableId: number) => void;
@@ -168,16 +169,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('laBolaAppState', JSON.stringify(state));
   }, [state]);
 
-  const login = (username: string, password: string) => {
-    if (username === 'admin' && password === 'admin') {
-      setState((prev) => ({
-        ...prev,
-        isAuthenticated: true,
-        currentUser: username,
-      }));
-      return true;
+  const login = async (username: string, password: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('Usuarios')
+        .select('*')
+        .eq('username', username)
+        .eq('password', password)
+        .single();
+
+      if (error) {
+        console.error('Error de Supabase:', error);
+        return false;
+      }
+
+      if (data) {
+        setState((prev) => ({
+          ...prev,
+          isAuthenticated: true,
+          currentUser: username,
+        }));
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      console.error('Error en el login:', err);
+      alert(`Error inesperado: ${err.message}`);
+      return false;
     }
-    return false;
   };
 
   const logout = () => {
