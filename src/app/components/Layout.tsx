@@ -44,9 +44,9 @@ export function Layout({ children }: LayoutProps) {
         {/* Logo */}
         <div className="p-6 border-b border-zinc-800">
           <h1 className="text-2xl font-bold text-white">
-            La Bola de <span className="text-green-400">Pelos</span>
+            Billar<span className="text-green-400">Control</span>{/* Cambio de titulo */}
           </h1>
-          <p className="text-xs text-zinc-500 mt-1">Billiards Bar Management</p>
+          <p className="text-xs text-zinc-500 mt-1">Sistema Gestor de Billar</p>
         </div>
 
         {/* Navigation */}
@@ -97,7 +97,7 @@ export function Layout({ children }: LayoutProps) {
       <header className="lg:hidden fixed top-0 left-0 right-0 bg-zinc-900 border-b border-zinc-800 z-50">
         <div className="flex items-center justify-between p-4">
           <h1 className="text-xl font-bold text-white">
-            La Bola de <span className="text-green-400">Pelos</span>
+            Billar<span className="text-green-400">Control</span>
           </h1>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

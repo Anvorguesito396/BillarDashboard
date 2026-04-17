@@ -84,8 +84,9 @@ export function Login() {
                   className="absolute inset-0 rounded-full bg-green-500/20 blur-md"
                 />
               </div>
+              {/* Cambio de titulo*/}
               <h1 className="text-3xl font-bold text-white mb-2">
-                La Bola de <span className="text-green-400">Pelos</span>
+                Billar<span className="text-green-400">Control</span>
               </h1>
               <p className="text-zinc-500 text-sm">Sistema de Gestión</p>
             </div>
