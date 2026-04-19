@@ -24,7 +24,13 @@ import {
 import { toast } from 'sonner';
 
 export function CashRegister() {
-  const { sales, dailyEarnings, closeDailyCut } = useApp();
+  const { sales, tables, dailyEarnings, closeDailyCut } = useApp();
+
+  const getTableName = (sale: any, tables: any[]) => {
+    if (sale.type !== 'table' || !sale.tableId) return null;
+    const table = tables.find(t => t.id === sale.tableId);
+    return table ? table.name : `Mesa ${sale.tableId}`;
+  };
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [cashDifference, setCashDifference] = useState('');
 
@@ -67,6 +73,40 @@ export function CashRegister() {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     return `${hours}h ${minutes}m`;
+  };
+
+  const handleExport = () => {
+    const csvHeader = 'Fecha,Tipo,Mesa,Productos,Tiempo,Total\\n';
+    
+    let csvContent = csvHeader;
+    
+    // Table sales
+    tableSales.forEach(sale => {
+      const tableName = getTableName(sale, tables);
+      const timeStr = sale.tableTime ? formatTime(sale.tableTime) : '';
+      const productsStr = sale.items.map(item => `${item.quantity}x ${item.name}`).join(', ');
+      csvContent += `"${formatDate(sale.timestamp)}","Renta Mesa + Productos","${tableName}","${productsStr}","${timeStr}","$${sale.total.toFixed(2)}\\n`;
+    });
+    
+    // POS sales
+    posSales.forEach(sale => {
+      const productsStr = sale.items.map(item => `${item.quantity}x ${item.name}`).join(', ');
+      csvContent += `"${formatDate(sale.timestamp)}","Venta Directa","N/A","${productsStr}","",$${sale.total.toFixed(2)}\\n`;
+    });
+    
+    // Summary row
+    csvContent += `"${new Date().toLocaleDateString('es-MX')}","","Total General: $${dailyEarnings.toFixed(2)}","","","$${dailyEarnings.toFixed(2)}"\\n`;
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `corte_caja_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('CSV exportado exitosamente');
   };
 
   const statsCards = [
@@ -120,6 +160,7 @@ export function CashRegister() {
           <div className="flex gap-3">
             <Button
               variant="outline"
+              onClick={handleExport}
               className="border-zinc-700 text-zinc-400 hover:text-white"
             >
               <Download className="w-4 h-4 mr-2" />
@@ -169,123 +210,64 @@ export function CashRegister() {
           })}
         </div>
 
-        {/* Sales Breakdown */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Table Sales */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-zinc-900 rounded-xl border border-zinc-800 p-6 shadow-xl"
-          >
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <TableProperties className="w-5 h-5 text-purple-400" />
-              Ventas por Mesa
-            </h2>
-
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {tableSales.length === 0 ? (
-                <p className="text-zinc-500 text-center py-8 text-sm">
-                  No hay ventas de mesa registradas
-                </p>
-              ) : (
-                tableSales.map((sale) => (
-                  <div
-                    key={sale.id}
-                    className="bg-zinc-800 rounded-lg p-4 border border-zinc-700"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <p className="text-white font-medium">Mesa {sale.tableId}</p>
-                        <p className="text-xs text-zinc-500">
-                          {formatDate(sale.timestamp)}
-                        </p>
-                      </div>
-                      <p className="text-lg font-bold text-purple-400">
-                        ${sale.total.toFixed(2)}
-                      </p>
-                    </div>
-
-                    <div className="space-y-1">
-                      {sale.tableTime && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-zinc-400">Tiempo de juego:</span>
-                          <span className="text-green-400">
-                            {formatTime(sale.tableTime)}
-                          </span>
-                        </div>
-                      )}
-                      {sale.items.length > 0 && (
-                        <div className="text-xs text-zinc-400 pt-2 border-t border-zinc-700 mt-2">
-                          Productos:{' '}
-                          {sale.items.map((item, idx) => (
-                            <span key={idx}>
-                              {item.quantity}x {item.name}
-                              {idx < sale.items.length - 1 ? ', ' : ''}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+        {/* All Sales List - Vertical Stack */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-zinc-900 rounded-xl border border-zinc-800 p-6 shadow-xl space-y-3"
+        >
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <Download className="w-5 h-5 text-blue-400" />
+            Historial Completo del Día
+          </h2>
+          {sales.length === 0 ? (
+            <p className="text-zinc-500 text-center py-12 text-sm">
+              No hay ventas registradas hoy
+            </p>
+          ) : (
+            sales.map((sale) => (
+              <motion.div
+                key={sale.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="bg-zinc-800 rounded-lg p-4 border border-zinc-700"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                  <div>
+                    <p className="text-white font-medium">
+                      {sale.type === 'table' 
+                        ? `Mesa ${getTableName(sale, tables)}`
+                        : 'Venta Directa'}
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      {formatDate(sale.timestamp)}
+                    </p>
                   </div>
-                ))
-              )}
-            </div>
-          </motion.div>
-
-          {/* POS Sales */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-zinc-900 rounded-xl border border-zinc-800 p-6 shadow-xl"
-          >
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5 text-blue-400" />
-              Ventas Directas
-            </h2>
-
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {posSales.length === 0 ? (
-                <p className="text-zinc-500 text-center py-8 text-sm">
-                  No hay ventas directas registradas
-                </p>
-              ) : (
-                posSales.map((sale) => (
-                  <div
-                    key={sale.id}
-                    className="bg-zinc-800 rounded-lg p-4 border border-zinc-700"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <p className="text-white font-medium">Venta Directa</p>
-                        <p className="text-xs text-zinc-500">
-                          {formatDate(sale.timestamp)}
-                        </p>
-                      </div>
-                      <p className="text-lg font-bold text-blue-400">
-                        ${sale.total.toFixed(2)}
-                      </p>
-                    </div>
-
-                    <div className="text-xs text-zinc-400">
-                      {sale.items.map((item, idx) => (
-                        <div key={idx} className="flex justify-between py-1">
-                          <span>
-                            {item.quantity}x {item.name}
-                          </span>
-                          <span className="text-green-400">
-                            ${(item.price * item.quantity).toFixed(2)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                  <p className="text-lg font-bold text-purple-400">
+                    ${sale.total.toFixed(2)}
+                  </p>
+                </div>
+                {sale.tableTime && (
+                  <div className="flex justify-between text-xs mb-2">
+                    <span className="text-zinc-400">Tiempo:</span>
+                    <span className="text-green-400">{formatTime(sale.tableTime)}</span>
                   </div>
-                ))
-              )}
-            </div>
-          </motion.div>
-        </div>
+                )}
+                {sale.items.length > 0 && (
+                  <div className="text-xs text-zinc-400">
+                    {sale.items.map((item, idx) => (
+                      <div key={idx} className="flex justify-between py-1">
+                        <span>{item.quantity}x {item.name}</span>
+                        <span className="text-green-400">${(item.price * item.quantity).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            ))
+          )}
+        </motion.div>
 
         {/* Summary */}
         <motion.div

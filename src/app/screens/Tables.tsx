@@ -102,13 +102,18 @@ export function Tables() {
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-white">{table.name}</h3>
-                      <p
-                        className={`text-sm ${
-                          table.status === 'occupied' ? 'text-green-400' : 'text-zinc-500'
-                        }`}
-                      >
-                        {table.status === 'occupied' ? 'Ocupada' : 'Disponible'}
-                      </p>
+                      <div className="flex gap-1 items-center">
+                        <p
+                          className={`text-sm font-medium ${
+                            table.status === 'occupied' ? 'text-green-400' : 'text-zinc-500'
+                          }`}
+                        >
+                          {table.status === 'occupied' ? 'Ocupada' : 'Disponible'}
+                        </p>
+                        <span className="px-2 py-0.5 bg-zinc-700 text-xs rounded-full text-zinc-400">
+                          {table.type}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -120,7 +125,7 @@ export function Tables() {
                       <Clock className="w-4 h-4 text-green-400" />
                       <span className="text-xs text-zinc-400">Tiempo transcurrido</span>
                     </div>
-                    <p className="text-3xl font-mono font-bold text-green-400">
+                    <p className="text-xl font-mono font-bold text-green-400">
                       {formatTime(table.elapsedSeconds)}
                     </p>
                   </div>
