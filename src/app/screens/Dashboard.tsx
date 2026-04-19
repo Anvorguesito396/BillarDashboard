@@ -13,6 +13,12 @@ import { Layout } from '../components/Layout';
 export function Dashboard() {
   const { tables, dailyEarnings, sales, products } = useApp();
 
+  const getTableName = (sale: any, tables: any[]) => {
+    if (sale.type !== 'table' || !sale.tableId) return null;
+    const table = tables.find(t => t.id === sale.tableId);
+    return table ? table.name : `Mesa ${sale.tableId}`;
+  };
+
   const activeTables = tables.filter((t) => t.status === 'occupied').length;
   const availableTables = tables.filter((t) => t.status === 'available').length;
   const productsSoldToday = sales.reduce(
@@ -169,13 +175,8 @@ export function Dashboard() {
                       table.status === 'occupied' ? 'text-white' : 'text-zinc-500'
                     }`}
                   >
-                    Mesa {table.id}
+                    {table.name}
                   </p>
-                  {table.status === 'occupied' && (
-                    <p className="text-[10px] text-green-400 relative z-10 mt-1">
-                      {formatTime(table.elapsedSeconds)}
-                    </p>
-                  )}
                 </motion.div>
               ))}
             </div>
@@ -221,7 +222,7 @@ export function Dashboard() {
                       <div>
                         <p className="text-white font-medium">
                           {sale.type === 'table'
-                            ? `Mesa ${sale.tableId}`
+                            ? `Mesa ${getTableName(sale, tables)}`
                             : 'Venta Directa'}
                         </p>
                         <p className="text-xs text-zinc-500">

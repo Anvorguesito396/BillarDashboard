@@ -9,9 +9,12 @@ export interface Product {
   category: 'beer' | 'snack' | 'drink';
 }
 
+export type TableType = 'billar' | 'carambola' | 'pool' | 'snooker' | 'rusa';
+
 export interface Table {
   id: number;
   name: string;
+  type: TableType;
   status: 'available' | 'occupied';
   startTime: number | null;
   elapsedSeconds: number;
@@ -54,8 +57,8 @@ interface AppContextType extends AppState {
   updateProduct: (product: Product) => void;
   addProduct: (product: Omit<Product, 'id'>) => void;
 
-  addTable: (name: string) => void;
-  updateTable: (id: number, newName: string) => void;
+  addTable: (name: string, type?: TableType) => void;
+  updateTable: (id: number, newName: string, type?: TableType) => void;
   deleteTable: (id: number) => void;
 
   closeDailyCut: (cashDifference: number) => void;
@@ -79,6 +82,7 @@ const initialProducts: Product[] = [
 const initialTables: Table[] = Array.from({ length: 8 }, (_, i) => ({
   id: i + 1,
   name: `Mesa ${i + 1}`,
+  type: 'billar' as const,
   status: 'available',
   startTime: null,
   elapsedSeconds: 0,
@@ -101,10 +105,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   });
 
   // 🔥 CRUD MESAS
-  const addTable = (name: string) => {
+  const getTableRate = (type: TableType): number => {
+    switch (type) {
+      case 'billar': return 50;
+      case 'carambola': return 60;
+      case 'pool': return 45;
+      case 'snooker': return 70;
+      case 'rusa': return 55;
+      default: return 50;
+    }
+  };
+
+  const addTable = (name: string, type: TableType = 'billar') => {
     const newTable: Table = {
       id: Date.now(),
       name,
+      type,
       status: 'available',
       startTime: null,
       elapsedSeconds: 0,
@@ -117,11 +133,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  const updateTable = (id: number, newName: string) => {
+  const updateTable = (id: number, newName: string, newType?: TableType) => {
     setState((prev) => ({
       ...prev,
       tables: prev.tables.map((t) =>
-        t.id === id ? { ...t, name: newName } : t
+        t.id === id ? { ...t, name: newName, ...(newType && { type: newType }) } : t
       ),
     }));
   };
@@ -230,7 +246,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!table || table.status !== 'occupied') return prev;
 
       const timeInHours = table.elapsedSeconds / 3600;
-      const tableCost = timeInHours * HOURLY_RATE;
+      const tableCost = timeInHours * getTableRate(table.type);
       const productsCost = table.products.reduce(
         (sum, item) => sum + item.price * item.quantity,
         0

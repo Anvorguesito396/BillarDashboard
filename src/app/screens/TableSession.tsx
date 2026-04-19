@@ -15,7 +15,17 @@ import { Layout } from '../components/Layout';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 
-const HOURLY_RATE = 50;
+import type { TableType } from '../context/AppContext';
+
+const getTableRate = (type: TableType): number => {
+  switch (type) {
+    case '6ft': return 40;
+    case '8ft': return 50;
+    case '9ft': return 60;
+    case 'snooker': return 70;
+    default: return 50;
+  }
+};
 
 export function TableSession() {
   const { tableId } = useParams();
@@ -50,7 +60,7 @@ export function TableSession() {
   };
 
   const timeInHours = table.elapsedSeconds / 3600;
-  const tableCost = timeInHours * HOURLY_RATE;
+  const tableCost = timeInHours * getTableRate(table.type);
   const productsCost = table.products.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
@@ -133,7 +143,7 @@ export function TableSession() {
                       ${tableCost.toFixed(2)}
                     </span>
                   </div>
-                  <p className="text-xs text-zinc-500 mt-1">${HOURLY_RATE}/hora</p>
+                  <p className="text-xs text-zinc-500 mt-1">${getTableRate(table.type)}/hora</p>
                 </div>
               </div>
             </motion.div>
