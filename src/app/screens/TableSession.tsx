@@ -27,7 +27,7 @@ const getTableRate = (type: TableType): number => {
     default: return 50;
   }
 };
-
+//hola mundo
 export function TableSession() {
   const { tableId } = useParams();
   const navigate = useNavigate();
